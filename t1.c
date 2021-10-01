@@ -1,50 +1,49 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-
-struct msgbuf{
+struct msgbuf {
   long mtype;
   char mtext[10];
 };
 
+int main() {
+  key_t key = 0x1234;
+  pid_t PID = fork();
+  struct msgbuf msg_send, msg_rcv;
+  int queue_id = msgget(key, IPC_CREAT | 0x1FF);
 
-
-int main(){
-  key_t keyMsg = 0x1234;
-  int id_msg;
-  id_msg = msgget(keyMsg, IPC_CREAT | 0x1FF);
-  pid_t PID;
-  PID = fork();
-
-  if(PID){
-    //processo pai
-    //printf("Sou o processo pai\n");
-    struct msgbuf mensagem;
-    mensagem.mtype = PID;
-    //strcpy(mensagem.mtext,"1");
-    for(int i=0;i<10;++i){
-      //mensagem.mtype = i;
-      sprintf(mensagem.mtext,"%d",i+1);
-      printf("antes de enviar: %s\n", mensagem.mtext);
-      msgsnd(id_msg, &mensagem, sizeof(mensagem)-sizeof(long),0);
-    }
-  } else{
-    //processo filho
-    //
-    //sleep(5);
-    //printf("Sou o processo filho\n");
-    struct msgbuf buff;
-    for(int i = 0;i < 10;++i){
-      msgrcv(id_msg, &buff,sizeof(buff)-sizeof(long),getpid(),0);
-      printf("o que recebi: %s\n",buff.mtext);
-      sleep(5);
-    }
-    msgctl(id_msg, IPC_RMID, NULL);
+  if (queue_id < 0) {
+    printf("Erro na criacao da fila\n");
+    exit(1);
   }
-}
 
+  if (PID) {
+    /* processo pai */
+    // printf("Sou o processo pai | PID = %d\n", PID);
+    msg_send.mtype = PID;
+
+    for (int i = 0; i < 10; ++i) {
+      sprintf(msg_send.mtext, "%d", i + 1);
+      printf("Mensagem enviada: %s\n", msg_send.mtext);
+      msgsnd(queue_id, &msg_send, sizeof(msg_send) - sizeof(long), 0);
+    }
+    exit(0);
+  }
+
+  /* processo filho */
+  // printf("Sou o processo filho | PID = %d\n", PID);
+
+  for (int i = 0; i < 10; ++i) {
+    msgrcv(queue_id, &msg_rcv, sizeof(msg_rcv) - sizeof(long), getpid(), 0);
+    printf("Mensagem recebida: %s\n", msg_rcv.mtext);
+    sleep(5);
+  }
+
+  msgctl(queue_id, IPC_RMID, NULL);
+  return 0;
+}
