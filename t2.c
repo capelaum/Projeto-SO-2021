@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
 void busy_waiting();
 
 int main() {
-  int i, pid, t;
-  clock_t start = clock(), end;
+  int i;
+  double t;
+  pid_t pid;
+  time_t start = time(NULL), end;
 
   for (i = 0; i < 3; i++) {
     pid = fork();
@@ -20,18 +24,21 @@ int main() {
 
     // Processo Filho
     if (pid == 0) {
-      printf("Processo Filho | PID = %d\n", pid);
+      printf("Comecou: Processo Filho | PID = %d\n", getpid());
       busy_waiting();
-      exit(1);
+      printf("Terminou: Processo Filho | PID = %d\n", getpid());
+      break;
 
     } else {
+      printf("\nSou o pai esperando a execucao dos filhos terminar..\n");
       wait(NULL);
-      printf("Processo Pai | PID = %d\n", pid);
+      printf("Processo Pai | PID = %d\n", getpid());
     }
   }
 
-  t = (end - start) / CLOCKS_PER_SEC;
-  printf("PID = %d | TIME: %d", pid, t);
+  end = time(NULL);
+  t = difftime(end, start);
+  printf("PID = %d | Tempo de execução: %fs\n", getpid(), t);
   return 0;
 }
 
