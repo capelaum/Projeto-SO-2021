@@ -24,7 +24,7 @@ int main() {
 
   /* processo 1 (pai) */
   if (PID) {
-    printf("Sou o processo 1 | PID = %d\n", PID);
+    // printf("Sou o processo 1 | PID = %d\n", PID);
     msg_send.mtype = PID;
 
     for (int i = 0; i < 10; ++i) {
@@ -36,7 +36,7 @@ int main() {
   }
 
   /* processo 2 (filho) */
-  printf("Sou o processo 2 | PID = %d\n", PID);
+  // printf("Sou o processo 2 | PID = %d\n", PID);
 
   for (int i = 0; i < 10; ++i) {
     msgrcv(queue_id, &msg_rcv, sizeof(msg_rcv) - sizeof(long), getpid(), 0);
