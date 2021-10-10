@@ -41,3 +41,15 @@ for(i=0; i<20000000000; i++);
 ```
 
 b) Ao término do “for”, o processo filho imprime o seu pid e o tempo de execução. Depois disso, termina a execução.
+
+## Compilação e execução
+
+Executar o script `run.sh` com `t1` ou `t2` no diretório raiz do projeto, ou compilar e executar manualmente:
+
+```bash
+# Pelo script
+./run.sh t2
+
+# Manualmente
+gcc t2.c -o t2 && ./t2
+```
