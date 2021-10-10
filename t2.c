@@ -6,19 +6,18 @@
 #include <time.h>
 #include <unistd.h>
 
-void execute_parent_process(pid_t process_queue[], int queue_size);
 void execute_child_process();
 void busy_waiting();
 void stop_process() {
-  printf("ALARME DISPARADO - PID: %d\n", getpid());
+  double t = clock() / CLOCKS_PER_SEC;
+  printf("PID: %d - QUANTUM %.fs\n", getpid(), t);
   kill(getpid(), SIGSTOP);  // para o processo filho corrente
   alarm(5);                 // reseta o alarme do processo filho corrente
 }
 
 int main() {
-  int i;
-  double t;
-  int queue_size = 3;
+  int i, queue_size = 3;
+  time_t start_total = time(NULL);
   pid_t pid, process_queue[queue_size];
   signal(SIGALRM, stop_process);
 
@@ -31,7 +30,7 @@ int main() {
     }
 
     if (pid == 0) {
-      execute_child_process();
+      execute_child_process(start_total);
       exit(0);
     } else {
       process_queue[i] = pid;
@@ -39,15 +38,9 @@ int main() {
     }
   }
 
-  execute_parent_process(process_queue, queue_size);
-  exit(0);
-
-  return 0;
-}
-
-void execute_parent_process(pid_t process_queue[], int queue_size) {
-  printf("\nIniciou: Processo Pai | PID = %d\n", getpid());
+  // Comeca o escalonamento com quantum de 5s
   int p_index = 0, p_count = 0;
+  printf("\n");
 
   while (p_count != queue_size) {
     kill(process_queue[p_index], SIGCONT);
@@ -57,7 +50,7 @@ void execute_parent_process(pid_t process_queue[], int queue_size) {
     int wait_stop = waitpid(process_queue[p_index], &wait_status, WUNTRACED);
 
     // Checa se processo acabou e incrementa contador
-    if (wait_finish != 0 && WIFEXITED(wait_status)) {
+    if (wait_finish != 0) {
       p_count++;
     }
 
@@ -69,11 +62,14 @@ void execute_parent_process(pid_t process_queue[], int queue_size) {
       }
     }
   }
+
+  return 0;
 }
 
-void execute_child_process() {
+void execute_child_process(time_t start_total) {
   alarm(5);  // seta o alarme inicial
   clock_t start = clock(), end;
+  time_t end_total;
   double t;
 
   printf("Iniciou: Processo Filho | PID = %d\n", getpid());
@@ -82,6 +78,10 @@ void execute_child_process() {
   end = clock();
   t = (end - start) / CLOCKS_PER_SEC;
   printf("PID = %d | Tempo de execução: %.1fs\n", getpid(), t);
+
+  end_total = time(NULL);
+  t = difftime(end_total, start_total);
+  printf("PID = %d | Tempo de execução total: %.1fs\n", getpid(), t);
 }
 
 void busy_waiting() {
