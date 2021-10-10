@@ -22,7 +22,7 @@ Os alunos devem implementar um escalonador round-robin (RR) em modo usuário da 
 
 ## O processo pai
 
-a) Cria três processos filhos e imediatamente pára a execução dos filhos;
+a) Cria três processos filhos e imediatamente para a execução dos filhos.
 
 b) O processo pai implementa um escalonador RR com quantum de 5 segundos.
 
@@ -32,7 +32,7 @@ c) Após o término da execução dos três processos filhos, o processo pai ter
 
 ## Os processos filho
 
-a) Vao executar o seguinte código:
+a) Vão executar o seguinte código:
 
 ```C
 long int i;
