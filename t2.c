@@ -6,13 +6,13 @@
 #include <time.h>
 #include <unistd.h>
 
-void busy_waiting();
 void execute_parent_process(pid_t process_queue[], int queue_size);
 void execute_child_process();
-void signal_handler() {}
-void change_process(pid_t pid) {
-  printf("ALARME DISPARADO!\n");
-  kill(getpid(), SIGSTOP);
+void busy_waiting();
+void stop_process() {
+  printf("ALARME DISPARADO - PID: %d\n", getpid());
+  kill(getpid(), SIGSTOP);  // para o processo filho corrente
+  alarm(5);                 // reseta o alarme do processo filho corrente
 }
 
 int main() {
@@ -20,10 +20,7 @@ int main() {
   double t;
   int queue_size = 3;
   pid_t pid, process_queue[queue_size];
-
-  // signal(SIGUSR1, signal_handler);
-  siginterrupt(SIGALRM, 1);
-  signal(SIGALRM, change_process);
+  signal(SIGALRM, stop_process);
 
   for (i = 0; i < queue_size; i++) {
     pid = fork();
@@ -38,11 +35,12 @@ int main() {
       exit(0);
     } else {
       process_queue[i] = pid;
-      kill(pid, SIGSTOP);
+      kill(pid, SIGSTOP);  // para a execução dos filhos
     }
   }
 
   execute_parent_process(process_queue, queue_size);
+  exit(0);
 
   return 0;
 }
@@ -52,37 +50,38 @@ void execute_parent_process(pid_t process_queue[], int queue_size) {
   int p_index = 0, p_count = 0;
 
   while (p_count != queue_size) {
-    alarm(0);
     kill(process_queue[p_index], SIGCONT);
 
-    // Check whether the process ended
-    int waitStatus;
-    int waitReturn = waitpid(process_queue[p_index], &waitStatus, WNOHANG);
-    if (waitReturn != 0 && WIFEXITED(waitStatus)) {
-      p_count++;  // Process ended, increase process count
-      printf("Terminou: PID = %d | COUNT = %d\n", process_queue[p_index],
-             p_count);
+    int wait_status;
+    int wait_finish = waitpid(process_queue[p_index], &wait_status, WNOHANG);
+    int wait_stop = waitpid(process_queue[p_index], &wait_status, WUNTRACED);
+
+    // Checa se processo acabou e incrementa contador
+    if (wait_finish != 0 && WIFEXITED(wait_status)) {
+      p_count++;
     }
 
-    p_index++;
-    if (p_index == queue_size) {
-      p_index = 0 + p_count;
+    // checa se processo parou e atualiza o indice do processo a executar
+    if (wait_stop) {
+      p_index++;
+      if (p_index == queue_size) {
+        p_index = p_count;
+      }
     }
   }
 }
 
 void execute_child_process() {
-  alarm(5);  // espera 5s ate disparar o alarme
-
-  time_t start = time(NULL), end;
+  alarm(5);  // seta o alarme inicial
+  clock_t start = clock(), end;
   double t;
+
   printf("Iniciou: Processo Filho | PID = %d\n", getpid());
   busy_waiting();
-  printf("Terminou: Processo Filho | PID = %d\n", getpid());
 
-  end = time(NULL);
-  t = difftime(end, start);
-  printf("PID = %d | Tempo de execução: %fs\n", getpid(), t);
+  end = clock();
+  t = (end - start) / CLOCKS_PER_SEC;
+  printf("PID = %d | Tempo de execução: %.1fs\n", getpid(), t);
 }
 
 void busy_waiting() {
