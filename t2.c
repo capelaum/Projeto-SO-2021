@@ -10,7 +10,7 @@ void execute_child_process();
 void busy_waiting();
 void stop_process() {
   double t = clock() / CLOCKS_PER_SEC;
-  // Descomente para ver o quantum de cada processo
+  // Printa o quantum de cada processo
   // printf("PID: %d - QUANTUM %.fs\n", getpid(), t);
   kill(getpid(), SIGSTOP);  // para o processo filho corrente
   alarm(5);                 // reseta o alarme do processo filho corrente
@@ -69,22 +69,18 @@ int main() {
 
 void execute_child_process(time_t start_total) {
   alarm(5);  // seta o alarme inicial
-  clock_t start = clock(), end;
-  time_t end_total;
+  clock_t start = clock();
   double t;
 
   printf("Iniciou: Processo Filho | PID = %d\n", getpid());
   busy_waiting();
 
-  end = clock();
-  t = (end - start) / CLOCKS_PER_SEC;
+  t = (clock() - start) / CLOCKS_PER_SEC;
   printf("PID = %d | Tempo de execução: %.1fs\n", getpid(), t);
 
-  end_total = time(NULL);
-  t = difftime(end_total, start_total);
+  t = difftime(time(NULL), start_total);
 
-  // Descomente para ver o tempo desde o início do programa
-  // até o fim da execução do processo
+  // Printa o tempo desde o início do programa até o fim da execução do processo
   // printf("PID = %d | Tempo de execução total: %.1fs\n", getpid(), t);
 }
 
