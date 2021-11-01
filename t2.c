@@ -11,7 +11,7 @@ void busy_waiting();
 void stop_process() {
   double t = clock() / CLOCKS_PER_SEC;
   // Printa o quantum de cada processo
-  // printf("PID: %d - QUANTUM %.fs\n", getpid(), t);
+  printf("PID: %d - QUANTUM %.fs\n", getpid(), t);
   kill(getpid(), SIGSTOP);  // para o processo filho corrente
   alarm(5);                 // reseta o alarme do processo filho corrente
 }
@@ -41,14 +41,15 @@ int main() {
 
   // Comeca o escalonamento com quantum de 5s
   int p_index = 0, p_count = 0;
+  int wait_status, wait_finish, wait_stop;
   printf("\n");
 
   while (p_count != queue_size) {
     kill(process_queue[p_index], SIGCONT);
 
-    int wait_status;
-    int wait_finish = waitpid(process_queue[p_index], &wait_status, WNOHANG);
-    int wait_stop = waitpid(process_queue[p_index], &wait_status, WUNTRACED);
+    wait_status;
+    wait_finish = waitpid(process_queue[p_index], &wait_status, WNOHANG);
+    wait_stop = waitpid(process_queue[p_index], &wait_status, WUNTRACED);
 
     // Checa se processo acabou e incrementa contador
     if (wait_finish != 0) {
@@ -81,7 +82,7 @@ void execute_child_process(time_t start_total) {
   t = difftime(time(NULL), start_total);
 
   // Printa o tempo desde o início do programa até o fim da execução do processo
-  // printf("PID = %d | Tempo de execução total: %.1fs\n", getpid(), t);
+  printf("PID = %d | Tempo de execução total: %.1fs\n", getpid(), t);
 }
 
 void busy_waiting() {

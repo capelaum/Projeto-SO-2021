@@ -24,7 +24,7 @@ int main() {
 
   /* processo 1 (pai) */
   if (PID) {
-    // printf("Sou o processo 1 | PID = %d\n", PID);
+    printf("Sou o processo 1 | PID = %d\n", PID);
     msg_send.mtype = PID;
 
     for (int i = 0; i < 10; ++i) {
@@ -32,11 +32,12 @@ int main() {
       printf("Mensagem enviada: %s\n", msg_send.mtext);
       msgsnd(queue_id, &msg_send, sizeof(msg_send) - sizeof(long), 0);
     }
+    wait(NULL);
     exit(0);
   }
 
   /* processo 2 (filho) */
-  // printf("Sou o processo 2 | PID = %d\n", PID);
+  printf("Sou o processo 2 | PID = %d\n", PID);
 
   for (int i = 0; i < 10; ++i) {
     msgrcv(queue_id, &msg_rcv, sizeof(msg_rcv) - sizeof(long), getpid(), 0);
